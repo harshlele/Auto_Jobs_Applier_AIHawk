@@ -232,7 +232,12 @@ class AIHawkEasyApplier:
             except NoSuchElementException:
                 logger.debug("See more button not found, skipping")
 
-            description = self.driver.find_element(By.CLASS_NAME, 'jobs-description-content__text').text
+            try:
+                description = self.driver.find_element(By.CLASS_NAME, 'jobs-description-content__text').text
+            except NoSuchElementException:
+                logger.debug("First class not found, checking for second class for premium members")
+                description = self.driver.find_element(By.CLASS_NAME, 'job-details-about-the-job-module__description').text
+
             logger.debug("Job description retrieved successfully")
             return description
         except NoSuchElementException:
@@ -830,6 +835,13 @@ class AIHawkEasyApplier:
     def _save_questions_to_json(self, question_data: dict) -> None:
         output_file = 'answers.json'
         question_data['question'] = self._sanitize_text(question_data['question'])
+
+        # Check if the question already exists in the JSON file and bail out if it does
+        for item in self.all_data:
+            if self._sanitize_text(item['question']) == question_data['question'] and item['type'] == question_data['type']:
+                logger.debug(f"Question already exists in answers.json. Aborting save of: {item['question']}")
+                return
+
         logger.debug(f"Saving question data to JSON: {question_data}")
         try:
             try:
@@ -847,6 +859,7 @@ class AIHawkEasyApplier:
             data.append(question_data)
             with open(output_file, 'w') as f:
                 json.dump(data, f, indent=4)
+                self.all_data = data
             logger.debug("Question data saved successfully to JSON")
         except Exception:
             tb_str = traceback.format_exc()
