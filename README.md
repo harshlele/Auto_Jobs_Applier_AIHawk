@@ -1,3 +1,5 @@
+My own fork of AIHawk Auto Jobs Applier.
+
 <div align="center">
 <img src="./assets/AIHawk.png">
 
